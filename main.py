@@ -2,6 +2,9 @@ import pygame
 import time
 import random
 
+#game speed
+game_speed = 15
+
 #game window size 
 window_x = 720
 window_y = 480
@@ -10,7 +13,7 @@ window_y = 480
 black = pygame.Color(0,0,0)
 white = pygame.Color(255,255,255)
 red = pygame.Color(255,0,0)
-green = pygame.Color(255,0,0)
+green = pygame.Color(0,255,0)
 blue = pygame.Color(0,0,255)
 
 #initialising pygame so that it creates a window using previous
@@ -44,6 +47,7 @@ snake_body = [
 # blocks. 
 # We then get a random number of blocks between 1 and the window size and then figure out the actual pixel distance
 # after to get the actual coordinates 
+
 apple_position = [
     random.randrange(1, (window_x//10)) * 10,
     random.randrange(1, (window_y//10)) * 10
@@ -57,7 +61,7 @@ default_direction = 'RIGHT'
 
 # what we will use to compare the current direction 
 # user will press a key which will be the current direction
-current_position = default_direction
+current_direction = default_direction
 
 # initialising score
 score = 0
@@ -118,5 +122,151 @@ def game_over():
     quit()
 
 # time to create actual game controls
+# main function which is always active
+# we're listening to keyboard events permanently here
+while True: 
+    # handling key events
+    for event in pygame.event.get():
+        # if they've pressed a key 
+        if event.type == pygame.KEYDOWN:
+            # depending on the key
+            # use python 3.10 matching instead of a list of if statements
+            # use if statements if you are using python 3.8 or older
+            # we're using the typical arrow keys as well as awsd which is used commonly for gaming
+            if event.key == pygame.K_UP or event.key == pygame.K_w:
+                current_direction = 'UP'
+            if event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                current_direction = 'DOWN'
+            if event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                current_direction = 'LEFT'
+            if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                current_direction = 'RIGHT'
+
+    # now we have to handle simultaneous button presses 
+    # we want to move in the direction that was pressed first, not both at the same time
+    if current_direction == 'UP' and default_direction != 'DOWN':
+        default_direction = 'UP'
+        # this if you are pressing up and any key other than down, change to up
+        # basically priority of key presses
+    if current_direction == 'DOWN' and default_direction != 'UP':
+        default_direction = 'DOWN'
+    if current_direction == 'LEFT' and default_direction != 'RIGHT':
+        default_direction = 'LEFT'
+    if current_direction == 'RIGHT' and default_direction != 'LEFT':
+        default_direction = 'RIGHT'
+
+    # handling movement :)
+    if default_direction == 'UP':
+        # snake position is (x, y) so moving up is changing y value by -10
+        # 10 because thats what we previously defined as 1 block, or 10 pixels
+        snake_position[1] -= 10
+    if default_direction == 'DOWN':
+        snake_position[1] += 10
+    if default_direction == 'LEFT':
+        # changing the x value of the body
+        snake_position[0] -= 10
+    if default_direction == 'RIGHT':
+        snake_position[0] += 10
+    
+    # increasing length of snake and score by 10 per apple
+
+    # we've previously changed the snake head position on key press
+    # now we have to add that to the body
+    # for example, we could go from body coordinates of (100, 50), (90,50)
+    # to new position of (100, 40) , (100, 50), (90, 50)
+    # ie, we update the body 
+    # then later we will remove the tail of snake to get final update
+    # (100, 40), (100, 50)
+    snake_body.insert(0, list(snake_position))
+
+    # if snake head position same as apple position,
+    # ie, x and y coordinates are the same then add score +10
+    # reset apple coordinates 
+    if snake_position[0] == apple_position[0] and snake_position[1] == apple_position[1]:
+        # if snake eats the body then make new snake head permanent, ie body grows because we dont
+        # remove the tail of the snake
+        score += 10
+        apple_spawn = False
+    else:
+        # if snake isnt eating the apple then on the next move, remove the tail so that body size
+        # stays the same 
+        snake_body.pop()
+
+    # if spawn is off, generate new apple
+    if not apple_spawn:
+        apple_position = [
+            random.randrange(1, (window_x//10)) * 10,
+            random.randrange(1, (window_y//10)) * 10
+        ]
+    
+    # set apple spawn to true again because we just generated a new one
+    apple_spawn = True
+
+    # update background every frame
+    # we'll have to rerender screen and we'll set background to black
+    game_window.fill(black)
+
+    # drawing the snake :)
+    for position in snake_body:
+        pygame.draw.rect(
+            # the surface we draw on
+            game_window,
+
+            # the color of the snake body
+            green,
+
+            # Rect (left, top, width, height)
+            # x and y axis, block height and width
+            # drawing the actual blocks on the screen based off of the coordinates of snake body
+            pygame.Rect(position[0], position[1], 10, 10),
+        )
+
+    # drawing the fruit
+    pygame.draw.rect(
+        # surface
+        game_window,
+
+        # color
+        red,
+
+        # again Rect(left, top, width, height)
+        pygame.Rect(apple_position[0], apple_position[1], 10, 10)
+    )
+
+    # losing conditions which includes touching the outside of the window
+    # or the snake head eating its own body
+
+    # touching window border (we only care about snake head position)
+    # if snake head touches the left border or right border
+    if snake_position[0] < 0 or snake_position[0] > window_x-10:
+        game_over()
+    # if snake head touches top border or bottom border respectively
+    if snake_position[1] < 0 or snake_position[1] > window_y-10:
+        game_over()
+    
+    # snake head eating its own body
+    # get all coordinates/blocks of body and exclude the snake head
+    for block in snake_body[1:]:
+        # if snake head position eating one of its body
+        # we compare x coordinates and y coordinates
+        if snake_position[0] == block[0] and snake_position[1] == block[1]:
+            game_over()
+
+    # continously updating the scoreboard
+    display_score(white, 'Arial', 20)
+
+    # refresh entire screen with all its updates
+    pygame.display.update()
+
+    # set refresh rate
+    fps.tick(game_speed)
+
+
+
+
+
+
+
+
 
 
