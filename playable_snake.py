@@ -3,7 +3,7 @@ import time
 import random
 
 #game speed
-game_speed = 15
+game_speed = 20
 
 #game window size 
 window_x = 720
@@ -180,12 +180,12 @@ while True:
     snake_body.insert(0, list(snake_position))
 
     # if snake head position same as apple position,
-    # ie, x and y coordinates are the same then add score +10
+    # ie, x and y coordinates are the same then add score +1
     # reset apple coordinates 
     if snake_position[0] == apple_position[0] and snake_position[1] == apple_position[1]:
         # if snake eats the body then make new snake head permanent, ie body grows because we dont
         # remove the tail of the snake
-        score += 10
+        score += 1
         apple_spawn = False
     else:
         # if snake isnt eating the apple then on the next move, remove the tail so that body size
