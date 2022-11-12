@@ -10,10 +10,10 @@ class agent():
         self.learning_rate = 0.01
 
         self.epsilon = 1.0
-        self.epsilon_discount_rate = 0.9992
+        self.epsilon_discount_rate = 0.992
         self.min_epsilon = 0.001
         
-        self.max_epochs = 10000
+        self.max_epochs = 3000
         self.table = np.zeros((2,2,2,2, 2,2,2,2, 2,2,2,2 ,4))
         self.environment = environment()
         self.scores = []
@@ -70,7 +70,7 @@ class agent():
 
 
                     
-                if self.environment.uneventful_move == 300:
+                if self.environment.uneventful_move == 200:
                     reward = -10
 
                 # Q-learning formula or Bellman equation
@@ -82,7 +82,7 @@ class agent():
                 current_state = new_state
 
                 # break the loop again
-                if self.environment.uneventful_move == 300:
+                if self.environment.uneventful_move == 1000:
                     break
 
             # storing the important values to look for history usage

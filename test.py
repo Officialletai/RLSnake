@@ -1,6 +1,7 @@
 import numpy as np
 
+x= np.zeros((2,4))
+print(x)
 
-snake = [2,4]
-print(snake[0])
-print(snake[1])
+print(x[0][2])
+print(x[1][0])

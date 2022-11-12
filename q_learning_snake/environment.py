@@ -24,8 +24,8 @@ class environment:
         self.epoch = None
         
         # game window size
-        self.window_x = 720
-        self.window_y = 480
+        self.window_y = 720
+        self.window_x = 480
 
         #block size/number of pixels per unit square
         self.block_size = 10
@@ -36,17 +36,17 @@ class environment:
         # giving the snake 1 block for body and setting its starting location
         # to be the center of the screen
         self.snake_body = [
-            [self.window_x / 2,self.window_y / 2]
+            [self.window_y / 2,self.window_x / 2]
         ]
 
         # initial snake position and size 
-        self.snake_position = [self.window_x / 2,self.window_y / 2]
+        self.snake_position = [self.window_y / 2,self.window_x / 2]
 
         # initialising color :)
         self.color = color()
 
-        # setting display size (window size, window_x, window_y)
-        self.game_window = pygame.display.set_mode((self.window_x, self.window_y))
+        # setting display size (window size, window_y, window_y)
+        self.game_window = pygame.display.set_mode((self.window_y, self.window_x))
 
         #FPS controller 
         self.fps = pygame.time.Clock()
@@ -59,7 +59,7 @@ class environment:
 
 
         # 
-        self.payoff_matrix = np.zeros((self.window_x // self.block_size, self.window_y // self.block_size))
+        self.payoff_matrix = np.zeros((self.window_y // self.block_size, self.window_x // self.block_size))
 
         self.payoff_matrix[int(self.snake_position[0] // self.block_size)][int(self.snake_position[1] // self.block_size)] = -1
 
@@ -87,14 +87,14 @@ class environment:
         # apple position is randomly generated 
         # // is division which then rounds the result down
         # suppose that one 'block' is 10 pixels wide and tall, then to get the number of length of blocks that
-        # our window is, we have to divide the window_x by 10 and get the integer. We wont deal with fractional 
+        # our window is, we have to divide the window_y by 10 and get the integer. We wont deal with fractional 
         # blocks. 
         # We then get a random number of blocks between 1 and the window size and then figure out the actual pixel distance
         # after to get the actual coordinates 
 
         apple_position = [
-            random.randrange(1, (self.window_x // self.block_size)) * self.block_size,
-            random.randrange(1, (self.window_y // self.block_size)) * self.block_size
+            random.randrange(1, (self.window_y // self.block_size)) * self.block_size,
+            random.randrange(1, (self.window_x // self.block_size)) * self.block_size
         ]
 
         # if the apple spawns in an area that is not possible, or that is inside the snakes body,
@@ -194,10 +194,10 @@ class environment:
         state.append(int(self.current_direction == "RIGHT"))
 
         # we check where the apple is relative to the snake's head
-        state.append(int(self.apple_position[1] < self.snake_position[1]))
-        state.append(int(self.apple_position[1] > self.snake_position[1]))
-        state.append(int(self.apple_position[0] < self.snake_position[0]))
-        state.append(int(self.apple_position[0] > self.snake_position[0]))
+        state.append(int((self.apple_position[1] // self.block_size) < (self.snake_position[1] // self.block_size)))
+        state.append(int((self.apple_position[1] // self.block_size) > (self.snake_position[1] // self.block_size)))
+        state.append(int((self.apple_position[0] // self.block_size) < (self.snake_position[0] // self.block_size)))
+        state.append(int((self.apple_position[0] // self.block_size) > (self.snake_position[0] // self.block_size)))
 
         # we check if there is any danger nearby and store the states
         # check for all directions from the snake's head
@@ -320,12 +320,12 @@ class environment:
 
         # touching window border (we only care about snake head position)
         # if snake head touches the left border or right border
-        if self.snake_position[0] < 0 or self.snake_position[0] >= (self.window_x - self.block_size):
+        if self.snake_position[0] < 0 or self.snake_position[0] >= (self.window_y - self.block_size):
             self.snake_alive = False
             self.score -= 1
             reward = -10
         # if snake head touches top border or bottom border respectively
-        if self.snake_position[1] <= 0 or self.snake_position[1] > (self.window_y - self.block_size):
+        if self.snake_position[1] <= 0 or self.snake_position[1] > (self.window_x - self.block_size):
             self.snake_alive = False
             self.score -= 1
             reward = -10
@@ -372,7 +372,7 @@ class environment:
         game_over_area = game_over_surface.get_rect()
 
         # where to place the position of the text
-        game_over_area.center = (self.window_x / 2, self.window_y / 2)
+        game_over_area.center = (self.window_y / 2, self.window_x / 2)
 
         # using blit to actually draw the text
         self.game_window.blit(game_over_surface, game_over_area)
@@ -411,21 +411,13 @@ class environment:
         # actually carrying out the check
         while self.snake_alive:
         
-            print("old position: ", self.snake_position)
+            print("old position: ", self.snake_position, "apple position", self.apple_position)
             # get the state so that we can pick the best action
             state = self.get_state()
             # do the best action
             action = np.argmax(table[state])
-
-
-
-            # if loop, then break
-            if self.uneventful_move > 289:
-                print("state: ", self.get_state())
-                print("current_action: ", action)
-                print("new position: ", self.snake_position)
-
-            if self.uneventful_move == 300:
+            
+            if self.uneventful_move == 1000:
                 print("stuck in loop")
                 break
             
