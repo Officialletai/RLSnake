@@ -411,18 +411,19 @@ class environment:
         # actually carrying out the check
         while self.snake_alive:
         
-            
+            print("old position: ", self.snake_position)
             # get the state so that we can pick the best action
             state = self.get_state()
             # do the best action
             action = np.argmax(table[state])
 
-            print(self.current_direction, self.snake_position)
+
 
             # if loop, then break
             if self.uneventful_move > 289:
                 print("state: ", self.get_state())
                 print("current_action: ", action)
+                print("new position: ", self.snake_position)
 
             if self.uneventful_move == 300:
                 print("stuck in loop")
