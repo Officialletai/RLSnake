@@ -1,4 +1,6 @@
 import numpy as np
 
 
-print(tuple())
+snake = [2,4]
+print(snake[0])
+print(snake[1])
