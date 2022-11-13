@@ -6,18 +6,48 @@ from environment import environment
 class agent():
     def __init__(self):
 
-        self.discount_rate = 0.95
-        self.learning_rate = 0.01
-
-        self.epsilon = 1.0
-        self.epsilon_discount_rate = 0.992
-        self.min_epsilon = 0.001
+        # defining the constants used for bellman equation 
+        # q learning
+        # these parameters will need to be optimised, typically best by machine,
+        # but for now, we'll crudely fine tune by hand to get an acceptable learning rate
+        self.learning_rate = 0.015
+        self.discount_rate = 0.995
         
-        self.max_epochs = 3000
+        # this is the exploitation vs exploration part of the reinforcement learning
+        # start with random (exploratory) moves and eventually almost only explot 
+        self.epsilon = 1.0
+        self.epsilon_discount_rate = 0.999
+        # this is minimum chance to explore
+        self.min_epsilon = 0.0001
+        
+        # total number of games we want to train over - pick one that lets the algorithm converge
+        self.max_epochs = 10000
+
+        # we can define the entire state of the game using 12 observations 
+        # is the snake moving:
+        # up
+        # down
+        # left
+        # right 
+        # in what direction is the apple from the snake:
+        # up
+        # down
+        # left
+        # right 
+        # is there immediate danger in the following direction:
+        # up
+        # down
+        # left
+        # right 
+
+        # we use the q-value table to map out every possible state and record the best action to take in that state:
+        # however, there are 2^12 states with 4 different directions, so we need to make the table following table:
         self.table = np.zeros((2,2,2,2, 2,2,2,2, 2,2,2,2 ,4))
+
+        # this is the environment that we can simulate for the agent
         self.environment = environment()
+        
         self.scores = []
-        self.survived = []
 
 
 
@@ -43,14 +73,13 @@ class agent():
 
             # if we displayed every iteration it would be too much, so we only do it every 25 iterations
             if i % 25 == 0:
-                print(f"Epochs: {i}, score: {np.mean(self.scores)}, survived: {np.mean(self.survived)}, epsilon_value: {self.epsilon}, learning_rate: {self.learning_rate}")
+                print(f"Epochs: {i}, score: {np.mean(self.scores)}, epsilon_value: {self.epsilon}")
                 self.scores = []
-                self.survived = []
             
             # save learning stuff every so often
             if (i < 500 and i % 10 == 0) or (i >= 500 and i < 1000 and i % 200 == 0) or (i >= 1000 and i % 500 == 0):
                 # wb means write and binary
-                with open(f'/home/tai/Documents/Snake/q_learning_snake/pickle/{i}.pickle', 'wb') as file:
+                with open(f'C:/Users/offic/Desktop/Studies/Coding/ProjectMasters/Snake_game/q_learning_snake/training_data/{i}.pickle', 'wb') as file:
                     pickle.dump(self.table, file)
                 # dump all the values into a pickle
                 # alternative to json
@@ -70,7 +99,7 @@ class agent():
 
 
                     
-                if self.environment.uneventful_move == 200:
+                if self.environment.uneventful_move == 1000:
                     reward = -10
 
                 # Q-learning formula or Bellman equation
@@ -87,7 +116,7 @@ class agent():
 
             # storing the important values to look for history usage
             self.scores.append(self.environment.score)
-            self.survived.append(self.environment.number_of_rounds)
+
             
 
 

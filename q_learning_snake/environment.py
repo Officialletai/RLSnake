@@ -30,14 +30,20 @@ class environment:
         #block size/number of pixels per unit square
         self.block_size = 10
 
-        #game speed
-        self.game_speed = 20
+        #game speed (only affects the playback speed)
+        self.game_speed = 30
 
         # giving the snake 1 block for body and setting its starting location
         # to be the center of the screen
         self.snake_body = [
             [self.window_y / 2,self.window_x / 2]
         ]
+        # just a notice, we set everything using coordinate system [y, x] instead of [x, y]
+        # if we dont do this, it either messes up numpy creating the payoff matrix dimensions (inverses) or
+        # we would have to make a position swap like:
+        # payoff_matrix[position[1]][position[0]]
+        # doesnt matter too much either way, we just have to deal with how ugly it is for now
+        # god have mercy on my soul
 
         # initial snake position and size 
         self.snake_position = [self.window_y / 2,self.window_x / 2]
@@ -58,9 +64,13 @@ class environment:
         self.current_direction = "RIGHT"
 
 
-        # 
+        # creating the payoff matrix according to screen size
+        # x and y axis are in a new index, created from a pixel screen size
+        # reasoning is that we dont want to use pixel size for everything, otherwise it would be too small
+        # so we use 10 pixel blocks instead, but then measuring that everytime is long, so instead we just
+        # make a new standard 10 by 10 pixel block and continue with our lives
         self.payoff_matrix = np.zeros((self.window_y // self.block_size, self.window_x // self.block_size))
-
+        # if snake position 
         self.payoff_matrix[int(self.snake_position[0] // self.block_size)][int(self.snake_position[1] // self.block_size)] = -1
 
         self.apple_position = self.spawn_apple()
@@ -72,14 +82,6 @@ class environment:
         self.uneventful_move = 0
 
         self.score = 1
-
-        self.number_of_rounds = 0
-
-
-
-        
-
-
 
 
     def spawn_apple(self):
@@ -234,13 +236,15 @@ class environment:
         # if None move, then you can move at random
         # here we redefine the action, which is a number/index, as the next direction
         if action == "None":
-            
+            # pick random action
             action = random.choice(["UP", "DOWN", "LEFT", "RIGHT"])
         else: 
+            # otherwise pick an action, this maps the action index to the actual action
             action = ["UP", "DOWN", "LEFT", "RIGHT"][action]
         
         # if the user presses anything else, carry on like nothing happened
         for event in pygame.event.get():
+            # if the user presses space, end the game
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     self.game_over_screen()
@@ -285,10 +289,15 @@ class environment:
         # then later we will remove the tail of snake to get final update
         # (100, 40), (100, 50)
         self.snake_body.insert(0, list(self.snake_position))
+        # new position now not safe to go back to
+        # set the payoff as -1, if its valid (sometimes it goes outside of game so it dies, but this will crash the payoff matrix)
+        if self.is_possible(self.snake_position[0], self.snake_position[1]):
+            self.payoff_matrix[int(self.snake_position[0] // self.block_size)][int(self.snake_position[1] // self.block_size)] = -1
 
         # at some point we may stop spawning apples or we may want apples to only spawn sometimes
         apple_spawn = True 
 
+        # whilst the snake maximises score, it is necessary that we use the reward mappings for the q value tble
         reward = 0
 
         # if snake head position same as apple position,
@@ -300,16 +309,25 @@ class environment:
             self.score += 1
             reward = 1
             apple_spawn = False
+            # if the snke eats the apple, then we should reset how many uneventful moves have occured
+            self.uneventful_move = 0
         else:
             # if snake isnt eating the apple then on the next move, remove the tail so that body size
             # stays the same 
+
+            # before that, we will declare that the place its tail was in is now safe/neutral
+            self.payoff_matrix[int(self.snake_body[-1][0] // self.block_size)][int(self.snake_body[-1][1] // self.block_size)] = 0
+            # then we return and remove the tail
             self.snake_body.pop()
-            # if it didnt eat the apple, then its an uneventful move
+            # since we didnt eat an apple, its an uneventful move
             self.uneventful_move += 1
 
         # if spawn is off, generate new apple
         if not apple_spawn:
             self.apple_position = self.spawn_apple()
+
+            # if we have a successful apple spawn, then assign it in the payoff matrix:
+            self.payoff_matrix[int(self.apple_position[0] // self.block_size)][int(self.apple_position[1] // self.block_size)] = 1
         
             # set apple spawn to true again because we just generated a new one
             apple_spawn = True
@@ -338,7 +356,9 @@ class environment:
             if self.snake_position[0] == block[0] and self.snake_position[1] == block[1]:
                 self.snake_alive = False
                 self.score -= 1
+
                 reward = -10
+
         
          # draw and update everything
 
@@ -357,9 +377,7 @@ class environment:
         # refresh entire screen with all its updates
         pygame.display.update()
 
-        # update number of rounds survived
-        self.number_of_rounds += 1
-
+        # return all the values to use in the agent 
         return self.get_state(), reward, not self.snake_alive
 
     # how to lose in snake (game over)
@@ -400,23 +418,26 @@ class environment:
         # reset, making the algorithm try to find loops
         self.uneventful_move = 0
         
-        # select the file 
-        filename = f"/home/tai/Documents/Snake/q_learning_snake/pickle/{epoch}.pickle"
-        # open the file
+        # select the file (would need to change depending on who is urnning this, or where from)
+        filename = f"C:/Users/offic/Desktop/Studies/Coding/ProjectMasters/Snake_game/q_learning_snake/training_data/{epoch}.pickle"
+        # open the file, rb = read binary 
         with open(filename, 'rb') as file:
             # pass through the pickle file containing the q table
             table = pickle.load(file)
+        # give it time to load, does not seem to be a problem at 2 seconds
         time.sleep(2)
 
         # actually carrying out the check
         while self.snake_alive:
-        
+            
+            # check out what direction the snake is moving in
             print("old position: ", self.snake_position, "apple position", self.apple_position)
             # get the state so that we can pick the best action
             state = self.get_state()
             # do the best action
             action = np.argmax(table[state])
             
+            # if it has made 1000 uneventful moves, then we know that the snake is stuck in a loop
             if self.uneventful_move == 1000:
                 print("stuck in loop")
                 break

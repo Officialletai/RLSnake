@@ -1,7 +1,9 @@
 import numpy as np
 
-x= np.zeros((2,4))
-print(x)
+snake_body = [
+    [2,1],
+    [3,2],
+    [4,2]
+]
 
-print(x[0][2])
-print(x[1][0])
+print(snake_body[-1][1])
