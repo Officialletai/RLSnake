@@ -1,9 +1,7 @@
 import numpy as np
 
 snake_body = [
-    [2,1],
-    [3,2],
-    [4,2]
+1,2,3,4,5,6,19,1
 ]
 
-print(snake_body[-1][1])
+print(np.argmax(snake_body))

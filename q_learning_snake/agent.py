@@ -72,8 +72,8 @@ class agent():
             self.environment.epoch = i
 
             # if we displayed every iteration it would be too much, so we only do it every 25 iterations
-            if i % 25 == 0:
-                print(f"Epochs: {i}, score: {np.mean(self.scores)}, epsilon_value: {self.epsilon}")
+            if i % 25 == 0 and i != 0:
+                print(f"Epochs: {i}, average_score: {np.mean(self.scores)}, median_score: {np.median(self.scores)}, highest_score: {np.argmax(self.scores)}, epsilon_value: {self.epsilon}")
                 self.scores = []
             
             # save learning stuff every so often
