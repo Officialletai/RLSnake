@@ -31,7 +31,7 @@ class environment:
         self.block_size = 10
 
         #game speed (only affects the playback speed)
-        self.game_speed = 30
+        self.game_speed = 60
 
         # giving the snake 1 block for body and setting its starting location
         # to be the center of the screen

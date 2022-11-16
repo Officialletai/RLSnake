@@ -10,13 +10,13 @@ class agent():
         # q learning
         # these parameters will need to be optimised, typically best by machine,
         # but for now, we'll crudely fine tune by hand to get an acceptable learning rate
-        self.learning_rate = 0.015
+        self.learning_rate = 0.01
         self.discount_rate = 0.995
         
         # this is the exploitation vs exploration part of the reinforcement learning
         # start with random (exploratory) moves and eventually almost only explot 
         self.epsilon = 1.0
-        self.epsilon_discount_rate = 0.999
+        self.epsilon_discount_rate = 0.9992
         # this is minimum chance to explore
         self.min_epsilon = 0.0001
         
@@ -73,7 +73,7 @@ class agent():
 
             # if we displayed every iteration it would be too much, so we only do it every 25 iterations
             if i % 25 == 0 and i != 0:
-                print(f"Epochs: {i}, average_score: {np.mean(self.scores)}, median_score: {np.median(self.scores)}, highest_score: {np.argmax(self.scores)}, epsilon_value: {self.epsilon}")
+                print(f"Epochs: {i}, average_score: {np.mean(self.scores)}, median_score: {np.median(self.scores)}, highest_score: {np.amax(self.scores)}, epsilon_value: {self.epsilon}")
                 self.scores = []
             
             # save learning stuff every so often
