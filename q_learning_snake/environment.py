@@ -70,17 +70,27 @@ class environment:
         # so we use 10 pixel blocks instead, but then measuring that everytime is long, so instead we just
         # make a new standard 10 by 10 pixel block and continue with our lives
         self.payoff_matrix = np.zeros((self.window_y // self.block_size, self.window_x // self.block_size))
-        # if snake position 
+
+        # if the snake goes back on itself, it will lose, so we can set the payoff as negative
         self.payoff_matrix[int(self.snake_position[0] // self.block_size)][int(self.snake_position[1] // self.block_size)] = -1
 
+        # spawn the apple in 
         self.apple_position = self.spawn_apple()
-
+        # eating the apple is good, so we set the value to positive 
         self.payoff_matrix[int(self.apple_position[0] // self.block_size)][int(self.apple_position[1] // self.block_size)] = 1
-
+        
+        # note that these payoffs arent used as rewards, they will just be used to test against, for instance
+        # if payoff matrix coordinate is == -1, do something
+        # in reality we could set these values to something completely different and it wouldnt matter,
+        # but for the sake of logic and making it easy to follow, this is what we will do
+        
+        # if the snake dies then we want to do something - equivalent to game over
         self.snake_alive = True
 
+        # keeping track of how many uneventful moves there are so we can tell when the snake is in a loop
         self.uneventful_move = 0
 
+        # start score as 1 and then take away 1 when the snake dies to punish without ending up with negative scores
         self.score = 1
 
 

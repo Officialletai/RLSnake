@@ -47,6 +47,7 @@ class agent():
         # this is the environment that we can simulate for the agent
         self.environment = environment()
         
+        # scores to display later
         self.scores = []
 
 
@@ -57,12 +58,15 @@ class agent():
             return random.choice([0, 1, 2, 3])
 
         else:
+            # otherwise, we want to pick the best possible move
             return np.argmax(self.table[state])
 
     def q_learn(self):
 
+        # setting gamespeed
         self.environment.fps.tick(self.environment.game_speed)
-    
+
+        # going through each play through
         for i in range(0, self.max_epochs):
             # initialising environment
             self.environment = environment()
@@ -98,11 +102,12 @@ class agent():
                 new_state, reward, finished = self.environment.step(action)
 
 
-                    
+                # if we are on the 1000th uneventful move, we are stuck in a loop, so we punish the snake
+                # and then later we will break the loop
                 if self.environment.uneventful_move == 1000:
                     reward = -10
 
-                # Q-learning formula or Bellman equation
+                # Q-learning formula / Bellman equation
                 self.table[current_state][action] = (1 - self.learning_rate)\
                     * self.table[current_state][action] + self.learning_rate\
                     * (reward + self.discount_rate * max(self.table[new_state])) 
@@ -110,7 +115,7 @@ class agent():
                 # update the state so that we can use the new q tablue value
                 current_state = new_state
 
-                # break the loop again
+                # break the loop
                 if self.environment.uneventful_move == 1000:
                     break
 
