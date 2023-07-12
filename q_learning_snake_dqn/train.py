@@ -3,6 +3,7 @@
 # run to train the model
 #DQNAgent().dqn_learn()
 
+import numpy as np
 from dqn_agent import DQNAgent
 import itertools
 

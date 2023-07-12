@@ -22,7 +22,7 @@ class DQNAgent:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = DQN(input_size, output_size).to(self.device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
-        self.environment = environment()
+        self.environment = environment(display_game=False)
         self.scores = []
 
     def pick_direction(self, state):
@@ -65,7 +65,7 @@ class DQNAgent:
 
     def dqn_learn(self):
         for i in range(0, self.max_epochs):
-            self.environment = environment()
+            self.environment = environment(display_game=False)
             self.environment.uneventful_move = 0
             self.environment.epoch = i
 

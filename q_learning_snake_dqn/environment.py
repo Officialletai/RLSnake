@@ -15,10 +15,12 @@ class color:
 
 # the actual game
 class environment:
-    def __init__(self):
+    def __init__(self, display_game=True):
 
         # initialising pygame :D
         pygame.init()
+
+        self.display_game = display_game  # Add this line
 
         # initialise an empty variable
         self.epoch = None
@@ -52,7 +54,8 @@ class environment:
         self.color = color()
 
         # setting display size (window size, window_y, window_y)
-        self.game_window = pygame.display.set_mode((self.window_y, self.window_x))
+        if self.display_game:
+            self.game_window = pygame.display.set_mode((self.window_y, self.window_x))
 
         #FPS controller 
         self.fps = pygame.time.Clock()
@@ -92,6 +95,7 @@ class environment:
 
         # start score as 1 and then take away 1 when the snake dies to punish without ending up with negative scores
         self.score = 1
+
 
 
     def spawn_apple(self):
@@ -372,22 +376,15 @@ class environment:
         
          # draw and update everything
 
-        # update background every frame
-        # we'll have to rerender screen and we'll set background to black
-        self.game_window.fill(self.color.black)
-        # continously updating the scoreboard
-        self.display_score()
-        # update epoch (in practice we only need to load this once but oh well)
-        self.display_epoch()
-        # continously updating food
-        self.display_apple(self.apple_position)
-        # continously updating snake
-        self.display_snake(self.snake_body)
         
-        # refresh entire screen with all its updates
-        pygame.display.update()
+        if self.display_game:  # Add this line
+            self.game_window.fill(self.color.black)
+            self.display_score()
+            self.display_epoch()
+            self.display_apple(self.apple_position)
+            self.display_snake(self.snake_body)
+            pygame.display.update()
 
-        # return all the values to use in the agent 
         return self.get_state(), reward, not self.snake_alive
 
     # how to lose in snake (game over)
