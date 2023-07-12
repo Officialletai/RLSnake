@@ -1,133 +1,96 @@
 import random
 import numpy as np
-import pickle
+from dqn_model import DQN
 from environment import environment
+import torch
+import torch.optim as optim
+import torch.nn.functional as F
 
-class agent():
-    def __init__(self):
 
-        # defining the constants used for bellman equation 
-        # q learning
-        # these parameters will need to be optimised, typically best by machine,
-        # but for now, we'll crudely fine tune by hand to get an acceptable learning rate
-        self.learning_rate = 0.01
-        self.discount_rate = 0.995
-        
-        # this is the exploitation vs exploration part of the reinforcement learning
-        # start with random (exploratory) moves and eventually almost only explot 
+class DQNAgent:
+    def __init__(self, input_size, output_size):
+        self.input_size = input_size
+        self.output_size = output_size
+        self.learning_rate = 0.001
+        self.discount_rate = 0.99
         self.epsilon = 1.0
-        self.epsilon_discount_rate = 0.9992
-        # this is minimum chance to explore
-        self.min_epsilon = 0.0001
-        
-        # total number of games we want to train over - pick one that lets the algorithm converge
+        self.epsilon_decay_rate = 0.995
+        self.min_epsilon = 0.01
+        self.batch_size = 32
         self.max_epochs = 10000
-
-        # we can define the entire state of the game using 12 observations 
-        # is the snake moving:
-        # up
-        # down
-        # left
-        # right 
-        # in what direction is the apple from the snake:
-        # up
-        # down
-        # left
-        # right 
-        # is there immediate danger in the following direction:
-        # up
-        # down
-        # left
-        # right 
-
-        # we use the q-value table to map out every possible state and record the best action to take in that state:
-        # however, there are 2^12 states with 4 different directions, so we need to make the table following table:
-        self.table = np.zeros((2,2,2,2, 2,2,2,2, 2,2,2,2 ,4))
-
-        # this is the environment that we can simulate for the agent
+        self.memory = []
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model = DQN(input_size, output_size).to(self.device)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
         self.environment = environment()
-        
-        # scores to display later
         self.scores = []
 
-
-
     def pick_direction(self, state):
-        # off path - sometimes we want to explore, so we pick a random choice
         if random.random() < self.epsilon:
             return random.choice([0, 1, 2, 3])
-
         else:
-            # otherwise, we want to pick the best possible move
-            return np.argmax(self.table[state])
+            state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0).to(self.device)
+            with torch.no_grad():
+                q_values = self.model(state_tensor)
+            return torch.argmax(q_values).item()
 
-    def q_learn(self):
+    def remember(self, state, action, reward, new_state, done):
+        self.memory.append((state, action, reward, new_state, done))
 
-        # setting gamespeed
-        self.environment.fps.tick(self.environment.game_speed)
+    def replay(self):
+        if len(self.memory) < self.batch_size:
+            return
+        batch = random.sample(self.memory, self.batch_size)
+        state_batch, action_batch, reward_batch, new_state_batch, done_batch = zip(*batch)
+        state_batch = torch.tensor(state_batch, dtype=torch.float32).to(self.device)
+        action_batch = torch.tensor(action_batch, dtype=torch.long).unsqueeze(1).to(self.device)
+        reward_batch = torch.tensor(reward_batch, dtype=torch.float32).unsqueeze(1).to(self.device)
+        new_state_batch = torch.tensor(new_state_batch, dtype=torch.float32).to(self.device)
+        done_batch = torch.tensor(done_batch, dtype=torch.float32).unsqueeze(1).to(self.device)
 
-        # going through each play through
+        q_values = self.model(state_batch)
+        next_q_values = self.model(new_state_batch)
+        max_next_q_values = torch.max(next_q_values, dim=1, keepdim=True)[0]
+        target_q_values = reward_batch + self.discount_rate * max_next_q_values * (1 - done_batch)
+
+        predicted_q_values = torch.gather(q_values, 1, action_batch)
+
+        loss = F.mse_loss(predicted_q_values, target_q_values)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        if self.epsilon > self.min_epsilon:
+            self.epsilon *= self.epsilon_decay_rate
+
+    def dqn_learn(self):
         for i in range(0, self.max_epochs):
-            # initialising environment
             self.environment = environment()
-            # another break method
             self.environment.uneventful_move = 0
-            # setting epoch value for display purposes
             self.environment.epoch = i
 
-            # if we displayed every iteration it would be too much, so we only do it every 25 iterations
             if i % 25 == 0 and i != 0:
-                print(f"Epochs: {i}, average_score: {np.mean(self.scores)}, median_score: {np.median(self.scores)}, highest_score: {np.amax(self.scores)}, epsilon_value: {self.epsilon}")
+                print(
+                    f"Epochs: {i}, average_score: {np.mean(self.scores)}, median_score: {np.median(self.scores)}, highest_score: {np.amax(self.scores)}, epsilon_value: {self.epsilon}"
+                )
                 self.scores = []
-            
-            # save learning stuff every so often
-            if (i < 500 and i % 10 == 0) or (i >= 500 and i < 1000 and i % 200 == 0) or (i >= 1000 and i % 500 == 0):
-                # wb means write and binary
-                with open(f'C:/Users/rhinz/OneDrive - Imperial College London/Desktop/Snake/RLSnake/q_learning_snake/training_data/{i}.pickle', 'wb') as file:
-                    '''C:/Users/rhinz/OneDrive - Imperial College London/Desktop/Snake/RLSnake/q_learning_snake/training_data/'''
-                    pickle.dump(self.table, file)
-                # dump all the values into a pickle
-                # alternative to json
-     
-            # set the state as a variable and save to current_state            
+
             current_state = self.environment.get_state()
-            # make sure that the epsilon never goes below the min when we include discount
-            self.epsilon = max(self.epsilon * self.epsilon_discount_rate, self.min_epsilon)
-            # is it finished
+            self.epsilon = max(self.epsilon * self.epsilon_decay_rate, self.min_epsilon)
             finished = False
-            # while not finished
+
             while not finished:
-                # pick an action based off the q value table
                 action = self.pick_direction(current_state)
-                # save the values from the step function so that we can use them in the q-learning formula
                 new_state, reward, finished = self.environment.step(action)
 
-
-                # if we are on the 1000th uneventful move, we are stuck in a loop, so we punish the snake
-                # and then later we will break the loop
                 if self.environment.uneventful_move == 1000:
                     reward = -10
 
-                # Q-learning formula / Bellman equation
-                self.table[current_state][action] = (1 - self.learning_rate)\
-                    * self.table[current_state][action] + self.learning_rate\
-                    * (reward + self.discount_rate * max(self.table[new_state])) 
-                
-                # update the state so that we can use the new q tablue value
+                self.remember(current_state, action, reward, new_state, finished)
                 current_state = new_state
 
-                # break the loop
                 if self.environment.uneventful_move == 1000:
                     break
 
-            # storing the important values to look for history usage
             self.scores.append(self.environment.score)
-
-            
-
-
-    
-
-
-        
-
+            self.replay()
