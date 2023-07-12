@@ -446,7 +446,7 @@ class environment:
             action = np.argmax(table[state])
             
             # if it has made 1000 uneventful moves, then we know that the snake is stuck in a loop
-            if self.uneventful_move == 1000:
+            if self.uneventful_move == 600:
                 print("stuck in loop")
                 break
             

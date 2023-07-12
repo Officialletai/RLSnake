@@ -14,10 +14,10 @@ class DQNAgent:
         self.learning_rate = 0.001
         self.discount_rate = 0.99
         self.epsilon = 1.0
-        self.epsilon_decay_rate = 0.995
+        self.epsilon_decay_rate = 0.9995
         self.min_epsilon = 0.03
         self.batch_size = 32
-        self.max_epochs = 10000
+        self.max_epochs = 1000
         self.memory = []
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = DQN(input_size, output_size).to(self.device)
@@ -85,13 +85,13 @@ class DQNAgent:
                 action = self.pick_direction(current_state)
                 new_state, reward, finished = self.environment.step(action)
 
-                if self.environment.uneventful_move == 1000:
+                if self.environment.uneventful_move == 600:
                     reward = -10
 
                 self.remember(current_state, action, reward, new_state, finished)
                 current_state = new_state
 
-                if self.environment.uneventful_move == 1000:
+                if self.environment.uneventful_move == 600:
                     break
 
             self.scores.append(self.environment.score)
