@@ -8,7 +8,7 @@ import torch.nn.functional as F
 
 
 class DQNAgent:
-    def __init__(self, input_size, output_size):
+    def __init__(self, input_size=12, output_size=4):
         self.input_size = input_size
         self.output_size = output_size
         self.learning_rate = 0.001
