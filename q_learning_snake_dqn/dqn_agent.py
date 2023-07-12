@@ -24,6 +24,7 @@ class DQNAgent:
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
         self.environment = environment(display_game=False)
         self.scores = []
+        self.q_values = []
 
     def pick_direction(self, state):
         if random.random() < self.epsilon:
@@ -49,6 +50,7 @@ class DQNAgent:
         done_batch = torch.tensor(done_batch, dtype=torch.float32).unsqueeze(1).to(self.device)
 
         q_values = self.model(state_batch)
+        self.q_values.append(q_values.detach().cpu().numpy())
         next_q_values = self.model(new_state_batch)
         max_next_q_values = torch.max(next_q_values, dim=1, keepdim=True)[0]
         target_q_values = reward_batch + self.discount_rate * max_next_q_values * (1 - done_batch)
@@ -71,7 +73,7 @@ class DQNAgent:
 
             if i % 25 == 0 and i != 0:
                 print(
-                    f"Epochs: {i}, average_score: {np.mean(self.scores)}, median_score: {np.median(self.scores)}, highest_score: {np.amax(self.scores)}, epsilon_value: {self.epsilon}"
+                    f"Epochs: {i}, average_score: {np.mean(self.scores)}, median_score: {np.median(self.scores)}, highest_score: {np.amax(self.scores)}, epsilon_value: {self.epsilon}, avg_q_value: {np.mean(self.q_values)}"
                 )
                 self.scores = []
 
