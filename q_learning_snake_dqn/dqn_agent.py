@@ -15,7 +15,7 @@ class DQNAgent:
         self.discount_rate = 0.99
         self.epsilon = 1.0
         self.epsilon_decay_rate = 0.995
-        self.min_epsilon = 0.01
+        self.min_epsilon = 0.03
         self.batch_size = 32
         self.max_epochs = 10000
         self.memory = []
