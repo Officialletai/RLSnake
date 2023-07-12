@@ -429,7 +429,8 @@ class environment:
         self.uneventful_move = 0
         
         # select the file (would need to change depending on who is urnning this, or where from)
-        filename = f"C:/Users/offic/Desktop/Studies/Coding/ProjectMasters/Snake_game/q_learning_snake/training_data/{epoch}.pickle"
+        filename = f"C:/Users/rhinz/OneDrive - Imperial College London/Desktop/Snake/RLSnake/q_learning_snake/training_data/{epoch}.pickle"
+        '''C:/Users/rhinz/OneDrive - Imperial College London/Desktop/Snake/RLSnake/q_learning_snake/training_data/'''
         # open the file, rb = read binary 
         with open(filename, 'rb') as file:
             # pass through the pickle file containing the q table

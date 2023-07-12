@@ -83,7 +83,8 @@ class agent():
             # save learning stuff every so often
             if (i < 500 and i % 10 == 0) or (i >= 500 and i < 1000 and i % 200 == 0) or (i >= 1000 and i % 500 == 0):
                 # wb means write and binary
-                with open(f'C:/Users/offic/Desktop/Studies/Coding/ProjectMasters/Snake_game/q_learning_snake/training_data/{i}.pickle', 'wb') as file:
+                with open(f'C:/Users/rhinz/OneDrive - Imperial College London/Desktop/Snake/RLSnake/q_learning_snake/training_data/{i}.pickle', 'wb') as file:
+                    '''C:/Users/rhinz/OneDrive - Imperial College London/Desktop/Snake/RLSnake/q_learning_snake/training_data/'''
                     pickle.dump(self.table, file)
                 # dump all the values into a pickle
                 # alternative to json
