@@ -1,5 +1,5 @@
-from agent import agent
+from dqn_agent import DQNagent
 
 # run to train the model
-agent().q_learn()
+DQNagent().q_learn()
 
