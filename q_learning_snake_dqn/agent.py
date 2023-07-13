@@ -1,6 +1,6 @@
 import random
 import numpy as np
-from dqn_model import DQN
+from model import DQN
 from environment import environment
 import torch
 import torch.optim as optim
@@ -32,8 +32,7 @@ class DQNAgent:
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
-        #memory
-        pass
+
 
     def replay(self):
         minibatch = random.sample(self.memory, self.batch_size)
@@ -51,7 +50,7 @@ class DQNAgent:
     def dqn_learn(self):
 
         for i in range(self.max_epochs):
-            self.environment = environment(display_game = False)
+            self.environment = environment(display_game=False)
             self.environment.epoch = i
             self.environment.uneventful_move = 0
 
@@ -73,10 +72,8 @@ class DQNAgent:
                     break
 
             self.score.append(self.environment.score)
-
             self.replay
 
-        pass
 
     def load(self):
         #load the weights
