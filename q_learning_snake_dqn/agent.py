@@ -1,6 +1,6 @@
 import random
 import numpy as np
-from dqn_model import DQN
+from model import DQN
 from environment import environment
 import torch
 import torch.optim as optim

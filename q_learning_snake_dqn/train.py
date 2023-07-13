@@ -4,7 +4,7 @@
 #DQNAgent().dqn_learn()
 
 import numpy as np
-from dqn_agent import DQNAgent
+from agent import DQNAgent
 import itertools
 
 # Define the hyperparameter combinations to search
