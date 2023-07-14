@@ -9,19 +9,23 @@ import torch.nn.functional as F
 
 class DQNAgent:
     def __init__(self, input_size=12, output_size=4):
-        
-        self.environment = environment(display_game=False)
-        self.model = DQN(input_size,output_size)
-        self.optimizer = optim.Adam(lr = self.learning_rate)
 
         #hyperparameters
         self.epsilon = 1.0
-        self.epsilon_min = 0.1
-        self.epsilon_decay_rate = 0.999
+        self.epsilon_min = 0.05
+        self.epsilon_decay_rate = 0.95
         self.max_epochs = 1000
         self.discount_factor = 0.995
         self.batch_size = 64
         self.learning_rate = 0.01
+
+        self.environment = environment(display_game=False)
+        self.model = DQN(input_size,output_size)
+        self.optimizer = optim.Adam(self.model.parameters(), lr = self.learning_rate)
+        self.memory = []
+        self.scores = []
+        self.q_values = []
+
 
 
     def pick_action(self, state):
@@ -57,6 +61,12 @@ class DQNAgent:
             self.environment.epoch = i
             self.environment.uneventful_move = 0
 
+            if i % 25 == 0 and i != 0:
+                print(
+                    f"Epochs: {i}, average_score: {np.mean(self.scores)}, median_score: {np.median(self.scores)}, highest_score: {np.amax(self.scores)}, epsilon_value: {self.epsilon}, avg_q_value: {np.mean(self.q_values)}"
+                )
+                self.scores = []
+
             current_state = self.environment.get_state()
             self.espilon = max(self.epsilon*self.epsilon_decay_rate,self.epsilon_min)
             finished = False
@@ -74,7 +84,7 @@ class DQNAgent:
                 if self.environment.uneventful_move == 600:
                     break
 
-            self.score.append(self.environment.score)
+            self.scores.append(self.environment.score)
             self.replay
 
 
