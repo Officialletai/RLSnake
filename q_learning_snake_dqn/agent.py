@@ -12,27 +12,27 @@ class DQNAgent:
         
         self.environment = environment(display_game=False)
         self.model = DQN(input_size,output_size)
+        self.optimizer = optim.Adam(lr = self.learning_rate)
 
         #hyperparameters
         self.epsilon = 1.0
         self.epsilon_min = 0.1
         self.epsilon_decay_rate = 0.999
         self.max_epochs = 1000
-        self.learning_rate = 0.05
+        self.discount_factor = 0.995
         self.batch_size = 64
+        self.learning_rate = 0.01
 
 
-    def pick_action(self):
+    def pick_action(self, state):
         if random.random() < self.epsilon:
-            #random action
-            pass
+            return random.choice([0,1,2,3])
         else:
-            #pick action based on dqn output
-            pass
+            return torch.argmax(self.model.forward(state))
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
-
+        #memory
 
     def replay(self):
         minibatch = random.sample(self.memory, self.batch_size)
@@ -42,8 +42,11 @@ class DQNAgent:
                 target[0][action] = reward
             else:
                 Q_future = max(self.model.forward(next_state)[0])
-                target[0][action] = reward + self.learning_rate * Q_future
+                target[0][action] = reward + self.discount_factor * Q_future
                 
+            loss = torch.sum(target - self.model.forward(state))^(2)
+            loss.backward()
+            self.optimizer.step()
             #function will update the model using randomly sampled experiences from the memory
         pass
 
