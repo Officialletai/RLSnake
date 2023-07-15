@@ -8,11 +8,11 @@ from agent import DQNAgent
 import itertools
 
 # Define the hyperparameter combinations to search
-learning_rates = [0.005, 0.001, 0.0005]
+learning_rates = [0.005, 0.0025]
 discount_rates = [0.9, 0.95]
-epsilon_decay_rates = [0.9995, 0.99975]
+epsilon_decay_rates = [0.9975, 0.99975]
 min_epsilons = [0.05]
-batch_sizes = [64]
+batch_sizes = [1024, 256, 64]
 
 # Perform grid search
 results = []

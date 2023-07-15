@@ -32,7 +32,9 @@ class DQNAgent:
         if random.random() < self.epsilon:
             return random.choice([0,1,2,3])
         else:
-            return torch.argmax(self.model.forward(state))
+            
+            move = torch.argmax(self.model.forward(state)).item()
+            return move
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
@@ -67,8 +69,11 @@ class DQNAgent:
                 )
                 self.scores = []
 
-            current_state = self.environment.get_state()
-            self.espilon = max(self.epsilon*self.epsilon_decay_rate,self.epsilon_min)
+            raw_state = self.environment.get_state()
+            current_state = torch.tensor(raw_state, dtype=torch.float32)
+            print(len(current_state.shape) == 1)
+            
+            self.epsilon = max(self.epsilon * self.epsilon_decay_rate ,self.epsilon_min)
             finished = False
 
             while not finished:
@@ -79,7 +84,7 @@ class DQNAgent:
                     reward = -10
 
                 self.remember(current_state, action, reward, next_state, finished)
-                current_state = next_state
+                current_state = torch.tensor(next_state, dtype=torch.float32)
 
                 if self.environment.uneventful_move == 600:
                     break
